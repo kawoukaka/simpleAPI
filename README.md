@@ -1,19 +1,19 @@
 # simpleAPI
 
-###Organization:
+### Organization:
 - Name
 - Address
 - Phone
 
 
-###User:
+### User:
 - First Name
 - Email
 - Address
 - Phone
 - Last Name
 
-###Instructions
+### Instructions
 
 Design and implement a simple application serving a RESTful API to perform operations on Organization as well as
 Users. You may use any language, framework, or object-relational mapping of your choice and create any additional
