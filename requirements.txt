@@ -1,0 +1,9 @@
+# dev
+Flask
+flask-cors
+flask_restplus
+
+# testing
+coverage
+flake8
+
