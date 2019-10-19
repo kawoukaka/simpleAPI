@@ -149,7 +149,7 @@ class AddUserToOrganization(Resource):
     @simple_ns.doc(response=responses)
     def post(self):
         """
-        AddUserToOrganization API
+        Add User To Organization API
 
         Add a single User to Organization in database
         """
@@ -192,7 +192,7 @@ class DeleteUserFromOrganization(Resource):
     @simple_ns.doc(response=responses)
     def post(self):
         """
-        DeleteUserFromOrganization API
+        Delete User From Organization API
 
         Delete a single User to Organization in database
         """
@@ -235,7 +235,7 @@ class GetUsersFromOrganization(Resource):
     @simple_ns.doc(response=responses)
     def post(self):
         """
-        GetUsersFromOrganization API
+        Get Users From Organization API
 
         Get Users From Organization in database
         """
@@ -266,7 +266,7 @@ class GetOrganizationsBelongToUser(Resource):
     @simple_ns.doc(response=responses)
     def post(self):
         """
-        GetOrganizationsBelongToUser API
+        Get Organizations Belong To User API
 
         Get Organizations Belong To User in database
         """

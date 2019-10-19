@@ -1,6 +1,7 @@
 from flask_restplus import fields
 
-
+# models for payload validation
+# ==============================================================
 create_organization_model = {
     "org_name": fields.String(
         required=True,
