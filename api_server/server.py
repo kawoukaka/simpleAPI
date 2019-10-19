@@ -137,6 +137,7 @@ class CreateUser(Resource):
         except UserAlreadyExistsError as e:
             return {'message': e.message, 'payload': args}, e.status
         except Exception:
+            logger.exception('Unexpected Error!')
             return {'message': 'Unexpected Error!', 'payload': args}, 500
         return {'message': 'Created User!', 'payload': args}, 200
 
@@ -148,7 +149,7 @@ class AddUserToOrganization(Resource):
     @simple_ns.doc(response=responses)
     def post(self):
         """
-        AddUserToOrganization API
+        Add User To Organization API
 
         Add a single User to Organization in database
         """
@@ -167,7 +168,7 @@ class AddUserToOrganization(Resource):
                     else:
                         raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
             else:
-                raise DatabaseSchemaError('Database Schema Error')
+                raise DatabaseSchemaError('Database Schema Error!', 404, args)
             if 'users' in user_org_db:
                 for user in user_org_db['users']:
                     if user['user_name'] == user_name:
@@ -175,10 +176,11 @@ class AddUserToOrganization(Resource):
                     else:
                         raise UserDoesNotExist('User does not exist!', 402, args)
             else:
-                raise DatabaseSchemaError('Database Schema Error', 404, args)
+                raise DatabaseSchemaError('Database Schema Error!', 404, args)
         except (UserDoesNotExist, OrganizationDoesNotExist, DatabaseSchemaError) as e:
             return {'message': e.message, 'payload': args}, e.status
         except Exception:
+            logger.exception('Unexpected Error!')
             return {'message': 'Unexpected Error!', 'payload': args}, 500
         return {'message': 'Added User in Organization!', 'payload': args}, 200
 
@@ -190,7 +192,7 @@ class DeleteUserFromOrganization(Resource):
     @simple_ns.doc(response=responses)
     def post(self):
         """
-        DeleteUserFromOrganization API
+        Delete User From Organization API
 
         Delete a single User to Organization in database
         """
@@ -209,7 +211,7 @@ class DeleteUserFromOrganization(Resource):
                     else:
                         raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
             else:
-                raise DatabaseSchemaError('Database Schema Error')
+                raise DatabaseSchemaError('Database Schema Error!', 404, args)
             if 'users' in user_org_db:
                 for user in user_org_db['users']:
                     if user['user_name'] == user_name and org_name in user['organizations']:
@@ -217,11 +219,11 @@ class DeleteUserFromOrganization(Resource):
                     else:
                         raise UserDoesNotExist('User does not exist!', 402, args)
             else:
-                raise DatabaseSchemaError('Database Schema Error', 404, args)
+                raise DatabaseSchemaError('Database Schema Error!', 404, args)
         except (UserDoesNotExist, OrganizationDoesNotExist, DatabaseSchemaError) as e:
             return {'message': e.message, 'payload': args}, e.status
         except Exception:
-            logger.exception('')
+            logger.exception('Unexpected Error!')
             return {'message': 'Unexpected Error!', 'payload': args}, 500
         return {'message': 'Deleted User from organization!', 'payload': args}, 200
 
@@ -233,7 +235,7 @@ class GetUsersFromOrganization(Resource):
     @simple_ns.doc(response=responses)
     def post(self):
         """
-        GetUsersFromOrganization API
+        Get Users From Organization API
 
         Get Users From Organization in database
         """
@@ -245,14 +247,15 @@ class GetUsersFromOrganization(Resource):
             if 'organizations' in user_org_db:
                 for org in user_org_db['organizations']:
                     if org['org_name'] == org_name:
-                        return {'results': org['users'], 'payload':args}, 200
+                        return {'results': org['users'], 'payload': args}, 200
                     else:
                         raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
             else:
-                raise DatabaseSchemaError('Database Schema Error', 404, args)
+                raise DatabaseSchemaError('Database Schema Error!', 404, args)
         except (OrganizationDoesNotExist, DatabaseSchemaError) as e:
             return {'message': e.message, 'payload': args}, e.status
         except Exception:
+            logger.exception('Unexpected Error!')
             return {'message': 'Unexpected Error!', 'payload': args}, 500
 
 
@@ -263,7 +266,7 @@ class GetOrganizationsBelongToUser(Resource):
     @simple_ns.doc(response=responses)
     def post(self):
         """
-        GetOrganizationsBelongToUser API
+        Get Organizations Belong To User API
 
         Get Organizations Belong To User in database
         """
@@ -279,7 +282,7 @@ class GetOrganizationsBelongToUser(Resource):
                     else:
                         raise UserDoesNotExist('User does not exist!', 402, args)
             else:
-                raise DatabaseSchemaError('Database Schema Error', 404, args)
+                raise DatabaseSchemaError('Database Schema Error!', 404, args)
         except (UserDoesNotExist, DatabaseSchemaError) as e:
             return {'message': e.message, 'payload': args}, e.status
         except Exception:
@@ -288,5 +291,5 @@ class GetOrganizationsBelongToUser(Resource):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
 

@@ -7,6 +7,7 @@ organization_db = {
     'org_name': []
 }
 # associate table
+# N:N relationship
 user_org_db = {
     'users': [],
     'organizations': []
