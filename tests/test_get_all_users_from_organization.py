@@ -4,7 +4,7 @@ import json
 
 
 @mock.patch('server.logger', mock.MagicMock())
-class GetOrganizationFromUserTestCases(TestCase):
+class CreatUserTestCases(TestCase):
     def setUp(self):
         server.app.testing = True
         self.app = server.app.test_client()
@@ -24,7 +24,7 @@ class GetOrganizationFromUserTestCases(TestCase):
         )
         return resp
 
-    def test_not_existed_user(self):
+    def test_not_existed_organization(self):
         server.user_db = {'user_name': ['John']}
         server.organization_db = {'org_name': ['CameraIQ']}
         server.user_org_db = {
@@ -35,12 +35,12 @@ class GetOrganizationFromUserTestCases(TestCase):
                 {'org_name': 'CameraIQ'}
             ]
         }
-        response = self._post_rest_api('/v1/get_organizations_belong_to_user', {'user_name': 'xxxx'})
+        response = self._post_rest_api('/v1/get_users_from_organization', {'org_name': 'xxxx'})
         self.assertEqual(response.status_code, 402)
         self.assertEqual(response.json, {
-            "message": "User does not exist!",
+            "message": "Organization does not exist!",
             "payload": {
-                'user_name': 'xxxx'
+                'org_name': 'xxxx'
             }
         })
 
@@ -48,16 +48,17 @@ class GetOrganizationFromUserTestCases(TestCase):
         with mock.patch('api_server.server.user_org_db', mock.MagicMock(side_effect={})):
             server.user_db = {'user_name': ['John']}
             server.organization_db = {'org_name': ['CameraIQ']}
-            response = self._post_rest_api('/v1/get_organizations_belong_to_user', {'user_name': 'John'})
+            response = self._post_rest_api('/v1/get_users_from_organization', {'user_name': 'John', 'org_name': 'CameraIQ'})
             self.assertEqual(response.status_code, 404)
             self.assertEqual(response.json, {
                 "message": "Database Schema Error!",
                 "payload": {
-                    'user_name': 'John'
+                    'user_name': 'John',
+                    'org_name': 'CameraIQ'
                 }
             })
 
-    def test_get_organizations_belong_to_user_successfully(self):
+    def test_get_users_from_organization_successfully(self):
         server.user_db = {'user_name': ['John']}
         server.organization_db = {'org_name': ['CameraIQ']}
         server.user_org_db = {
@@ -68,11 +69,11 @@ class GetOrganizationFromUserTestCases(TestCase):
                 {'org_name': 'CameraIQ', 'users': ['John']}
             ]
         }
-        response = self._post_rest_api('/v1/get_organizations_belong_to_user', {'user_name': 'John'})
+        response = self._post_rest_api('/v1/get_users_from_organization', {'org_name': 'CameraIQ'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {
-            "results": ['CameraIQ'],
+            "results": ['John'],
             "payload": {
-                'user_name': 'John'
+                'org_name': 'CameraIQ'
             }
         })
