@@ -63,7 +63,19 @@ class AddUserToOrganizationTestCases(TestCase):
                 'user_email': 'John@att.com'
             }]
         }
-        server.organization_tb = {'organizations': [{'org_name': 'CameraIQ'}]}
+        server.organization_tb = {
+            'organizations': [{
+                'org_name': 'CameraIQ'
+            }]
+        }
+        server.user_org_tb = {
+            'users': [
+                {'user_email': 'John@att.com', 'organizations': ['']}
+            ],
+            'organizations': [
+                {'org_name': 'CameraIQ', 'users': ['']}
+            ]
+        }
         response = self._post_rest_api('/v1/add_user_to_organization', {
             'user_email': 'John@att.com',
             'org_name': 'CameraIQ'
