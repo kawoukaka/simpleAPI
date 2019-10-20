@@ -1,26 +1,52 @@
-# ===================================================
-# Base Image
-# ===================================================
-From python:3.7-alpine3.10
+# Debian Slim with Python 3.6 on Docker
+# =============================================================================
+# FROM dockercentral.it.example.com:5100/com.example.dev.argos/debian:stretch-slim
+FROM debian:stretch-slim
 
-ENV PYTHON_VERSERION=3.7
+# Set the Python 3.x.x version.
+# =============================================================================
+ENV PYTHON_VERSION="3.7.3"
 
-USER root
+# =============================================================================
+# Debian: Ensure we have an up to date package index.
+# =============================================================================
+RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update
+RUN apt-get dist-upgrade
 
-# Add apache2 package
-RUN apk --update --no-cache add apache2 apache2-dev \
-    wget ca-certificates make gcc musl-dev
+RUN apt-get install -y locales
 
-# Install mod_wsgi express
-RUN /usr/local/bin/pip3 install --no-binary "mod_wsgi" mod_wsgi
+# Install Python3 interpreter
+# =============================================================================
+WORKDIR /root/python-workspace
 
-# Set Apache2 Configuration
-RUN mkdir -p /run/apache2
+# Set Locale to US English.
+RUN localedef  -c -i en_US -f UTF-8 en_US.UTF-8 || /bin/true
+ENV LC_ALL "en_US.UTF-8"
+
+# Download and build python 3.x.x
+COPY ./python_build_all.sh .
+RUN  ./python_build_all.sh
+
+# Add python shared libs to the path.
+COPY python3-x86_64.conf /etc/ld.so.conf.d/
+RUN ldconfig -v
+
+# Upgrade pip.
+RUN /usr/local/bin/pip3 install --upgrade pip
+
+# Install Apache2 for use from port 80.
+# =============================================================================
+RUN apt-get -y install apache2 apache2-dev
+
+# Install mod_wsgi-express over Apache2.
+# =============================================================================
+RUN /usr/local/bin/pip3 install mod_wsgi
 
 # Set testing and run server folder
 RUN mkdir /home/bin
 COPY ./bin /home/bin/
-RUN chown -R apache.apache /home/bin/ && chmod 777 /home/bin/*.sh
+RUN chown -R www-data.www-data /home/bin/ && chmod 777 /home/bin/*.sh
 
 # Set python code into docker
 WORKDIR /home/app
@@ -30,12 +56,12 @@ RUN pip install -r requirements.txt
 
 COPY ./api_server ./api_server
 
-RUN chown -R apache.apache ./
+RUN chown -R www-data.www-data ./
 
 EXPOSE 8001
 
 ENTRYPOINT /usr/local/bin/mod_wsgi-express start-server \
-    --user apache \
+    --user www-data \
     --maximum-requests=250 \
     --access-log \
     --access-log-format "[SIMPLE-API][%>s] %h %l %u %b \"%{Referer}i\" \"%{User-agent}i\" \"%r\"" \

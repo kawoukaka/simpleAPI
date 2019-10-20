@@ -1,1 +1,1 @@
-from server import app as application
+from api_server.server import app as application
