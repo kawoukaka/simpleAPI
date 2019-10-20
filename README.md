@@ -48,6 +48,8 @@ communicate your design choices. We expect your API to support the following ope
     <pre>docker build -t xxxx/simple_api:latest</pre>
   docker is running on 127.0.0.1:8001 if you are running with docker desktop version.
   The port number is able to change in Dockerfile and docker-compose file for mapping. 
+  ###### If you don't want to build in local machine, you can checkout image from my dockerhub
+    <pre>docker pull kawoukaka/simple_api:latest</pre>
   ###### RUN docker compose to run container: 
     <pre>docker compose up</pre>
   ###### Check server url 127.0.0.1:8001
