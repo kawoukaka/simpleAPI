@@ -11,7 +11,13 @@ from api_server.flask_models import (
     get_all_organization_from_user_model,
     get_all_user_model,
 )
-from api_server.error_handler import *
+from api_server.error_handler import (
+    OrganizationAlreadyExistsError,
+    UserAlreadyExistsError,
+    OrganizationDoesNotExist,
+    UserDoesNotExist,
+    DatabaseSchemaError
+)
 from api_server.example_db import (
     user_tb,
     organization_tb,
@@ -51,7 +57,7 @@ api = Api(app,
           prefix='',
           version='1.0',
           title='simple API',
-          description='''The simple api provides create/view/edit 
+          description='''The simple api provides create/view/edit
           on the users in an organization''',
           catch_all_404s=True)
 

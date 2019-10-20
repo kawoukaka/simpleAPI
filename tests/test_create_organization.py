@@ -3,7 +3,6 @@ from api_server import server
 import json
 
 
-@mock.patch('server.logger', mock.MagicMock())
 class CreateOrganizationTestCases(TestCase):
     def setUp(self):
         server.app.testing = True
@@ -25,7 +24,7 @@ class CreateOrganizationTestCases(TestCase):
         return resp
 
     def test_already_existed_organization(self):
-        server.organization_db = {'org_name': ['CameraIQ']}
+        server.organization_tb = {'organizations': [{'org_name': 'CameraIQ'}]}
         response = self._post_rest_api('/v1/create_organization', {'org_name': 'CameraIQ'})
         self.assertEqual(response.status_code, 402)
         self.assertEqual(response.json, {
@@ -36,7 +35,7 @@ class CreateOrganizationTestCases(TestCase):
         })
 
     def test_create_organization_successfully(self):
-        server.organization_db = {'org_name': []}
+        server.organization_tb = {'organizations': []}
         response = self._post_rest_api('/v1/create_organization',  {'org_name': 'CameraIQ'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {

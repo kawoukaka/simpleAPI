@@ -3,7 +3,6 @@ from api_server import server
 import json
 
 
-@mock.patch('server.logger', mock.MagicMock())
 class CreatUserTestCases(TestCase):
     def setUp(self):
         server.app.testing = True
@@ -25,14 +24,20 @@ class CreatUserTestCases(TestCase):
         return resp
 
     def test_not_existed_organization(self):
-        server.user_db = {'user_name': ['John']}
-        server.organization_db = {'org_name': ['CameraIQ']}
-        server.user_org_db = {
+        server.user_tb = {
+            'users': [{
+                'user_first_name': 'John',
+                'user_last_name': 'Doe',
+                'user_email': 'John@att.com'
+            }]
+        }
+        server.organization_tb = {'organizations': [{'org_name': 'CameraIQ'}]}
+        server.user_org_tb = {
             'users': [
-                {'user_name': 'John'}
+                {'user_email': 'John@att.com', 'organizations': ['CameraIQ']}
             ],
             'organizations': [
-                {'org_name': 'CameraIQ'}
+                {'org_name': 'CameraIQ', 'users': ['John@att.com']}
             ]
         }
         response = self._post_rest_api('/v1/get_users_from_organization', {'org_name': 'xxxx'})
@@ -45,34 +50,49 @@ class CreatUserTestCases(TestCase):
         })
 
     def test_database_schema_error(self):
-        with mock.patch('api_server.server.user_org_db', mock.MagicMock(side_effect={})):
-            server.user_db = {'user_name': ['John']}
-            server.organization_db = {'org_name': ['CameraIQ']}
-            response = self._post_rest_api('/v1/get_users_from_organization', {'user_name': 'John', 'org_name': 'CameraIQ'})
+        with mock.patch('api_server.server.user_org_tb', mock.MagicMock(side_effect={})):
+            server.user_tb = {
+                'users': [{
+                    'user_first_name': 'John',
+                    'user_last_name': 'Doe',
+                    'user_email': 'John@att.com'
+                }]
+            }
+            server.organization_tb = {'organizations': [{'org_name': 'CameraIQ'}]}
+            response = self._post_rest_api('/v1/get_users_from_organization', {
+                'user_email': 'John@att.com',
+                'org_name': 'CameraIQ'
+            })
             self.assertEqual(response.status_code, 404)
             self.assertEqual(response.json, {
                 "message": "Database Schema Error!",
                 "payload": {
-                    'user_name': 'John',
+                    'user_email': 'John@att.com',
                     'org_name': 'CameraIQ'
                 }
             })
 
     def test_get_users_from_organization_successfully(self):
-        server.user_db = {'user_name': ['John']}
-        server.organization_db = {'org_name': ['CameraIQ']}
-        server.user_org_db = {
+        server.user_tb = {
+            'users': [{
+                'user_first_name': 'John',
+                'user_last_name': 'Doe',
+                'user_email': 'John@att.com'
+            }]
+        }
+        server.organization_tb = {'organizations': [{'org_name': 'CameraIQ'}]}
+        server.user_org_tb = {
             'users': [
-                {'user_name': 'John', 'organizations': ['CameraIQ']}
+                {'user_email': 'John@att.com', 'organizations': ['CameraIQ']}
             ],
             'organizations': [
-                {'org_name': 'CameraIQ', 'users': ['John']}
+                {'org_name': 'CameraIQ', 'users': ['John@att.com']}
             ]
         }
         response = self._post_rest_api('/v1/get_users_from_organization', {'org_name': 'CameraIQ'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {
-            "results": ['John'],
+            "results": ['John@att.com'],
             "payload": {
                 'org_name': 'CameraIQ'
             }

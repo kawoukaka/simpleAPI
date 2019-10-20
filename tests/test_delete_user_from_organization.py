@@ -3,7 +3,6 @@ from api_server import server
 import json
 
 
-@mock.patch('server.logger', mock.MagicMock())
 class DeleteUserFromOrganizationTestCases(TestCase):
     def setUp(self):
         server.app.testing = True
@@ -25,78 +24,111 @@ class DeleteUserFromOrganizationTestCases(TestCase):
         return resp
 
     def test_not_existed_user(self):
-        server.user_db = {'user_name': ['John']}
-        server.organization_db = {'org_name': ['CameraIQ']}
-        server.user_org_db = {
+        server.user_tb = {
+            'users': [{
+                'user_first_name': 'John',
+                'user_last_name': 'Doe',
+                'user_email': 'John@att.com'
+            }]
+        }
+        server.organization_tb = {'organizations': [{'org_name': 'CameraIQ'}]}
+        server.user_org_tb = {
             'users': [
-                {'user_name': 'John'}
+                {'user_email': 'John@att.com'}
             ],
             'organizations': [
                 {'org_name': 'CameraIQ'}
             ]
         }
-        response = self._post_rest_api('/v1/delete_user_from_organization', {'user_name': 'xxxx', 'org_name': 'CameraIQ'})
+        response = self._post_rest_api('/v1/delete_user_from_organization', {
+            'user_email': 'xxxx',
+            'org_name': 'CameraIQ'
+        })
         self.assertEqual(response.status_code, 402)
         self.assertEqual(response.json, {
             "message": "User does not exist!",
             "payload": {
-                 'user_name': 'xxxx',
+                 'user_email': 'xxxx',
                  'org_name': 'CameraIQ'
             }
         })
 
     def test_not_existed_organization(self):
-        server.user_db = {'user_name': ['John']}
-        server.organization_db = {'org_name': ['CameraIQ']}
-        server.user_org_db = {
+        server.user_tb = {
+            'users': [{
+                'user_first_name': 'John',
+                'user_last_name': 'Doe',
+                'user_email': 'John@att.com'
+            }]
+        }
+        server.organization_tb = {'organizations': [{'org_name': 'CameraIQ'}]}
+        server.user_org_tb = {
             'users': [
-                {'user_name': 'John', 'organizations': ['CameraIQ']}
+                {'user_email': 'John@att.com', 'organizations': ['CameraIQ']}
             ],
             'organizations': [
                 {'org_name': 'CameraIQ', 'users': ['John']}
             ]
         }
-        response = self._post_rest_api('/v1/delete_user_from_organization', {'user_name': 'John', 'org_name': 'xxxx'})
+        response = self._post_rest_api('/v1/delete_user_from_organization', {'user_email': 'John@att.com', 'org_name': 'xxxx'})
         self.assertEqual(response.status_code, 402)
         self.assertEqual(response.json, {
             "message": "Organization does not exist!",
             "payload": {
-                'user_name': 'John',
+                'user_email': 'John@att.com',
                 'org_name': 'xxxx'
             }
         })
 
     def test_database_schema_error(self):
-        with mock.patch('api_server.server.user_org_db', mock.MagicMock(side_effect={})):
-            server.user_db = {'user_name': ['John']}
-            server.organization_db = {'org_name': ['CameraIQ']}
-            response = self._post_rest_api('/v1/delete_user_from_organization', {'user_name': 'John', 'org_name': 'CameraIQ'})
+        with mock.patch('api_server.server.user_org_tb', mock.MagicMock(side_effect={})):
+            server.user_tb = {
+                'users': [{
+                    'user_first_name': 'John',
+                    'user_last_name': 'Doe',
+                    'user_email': 'John@att.com'
+                }]
+            }
+            server.organization_tb = {'organizations': [{'org_name': 'CameraIQ'}]}
+            response = self._post_rest_api('/v1/delete_user_from_organization', {
+                'user_email': 'John@att.com',
+                'org_name': 'CameraIQ'
+            })
             self.assertEqual(response.status_code, 404)
             self.assertEqual(response.json, {
                 "message": "Database Schema Error!",
                 "payload": {
-                    'user_name': 'John',
+                    'user_email': 'John@att.com',
                     'org_name': 'CameraIQ'
                 }
             })
 
     def test_delete_user_from_organization_successfully(self):
-        server.user_db = {'user_name': ['John']}
-        server.organization_db = {'org_name': ['CameraIQ']}
-        server.user_org_db = {
+        server.user_tb = {
+            'users': [{
+                'user_first_name': 'John',
+                'user_last_name': 'Doe',
+                'user_email': 'John@att.com'
+            }]
+        }
+        server.organization_tb = {'organizations': [{'org_name': 'CameraIQ'}]}
+        server.user_org_tb = {
             'users': [
-                {'user_name': 'John', 'organizations': ['CameraIQ']}
+                {'user_email': 'John@att.com', 'organizations': ['CameraIQ']}
             ],
             'organizations': [
-                {'org_name': 'CameraIQ', 'users': ['John']}
+                {'org_name': 'CameraIQ', 'users': ['John@att.com']}
             ]
         }
-        response = self._post_rest_api('/v1/delete_user_from_organization', {'user_name': 'John', 'org_name': 'CameraIQ'})
+        response = self._post_rest_api('/v1/delete_user_from_organization', {
+            'user_email': 'John@att.com',
+            'org_name': 'CameraIQ'
+        })
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {
             "message": "Deleted User from organization!",
             "payload": {
-                'user_name': 'John',
+                'user_email': 'John@att.com',
                 'org_name': 'CameraIQ'
             }
         })

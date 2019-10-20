@@ -3,7 +3,6 @@ from api_server import server
 import json
 
 
-@mock.patch('server.logger', mock.MagicMock())
 class AddUserToOrganizationTestCases(TestCase):
     def setUp(self):
         server.app.testing = True
@@ -25,37 +24,55 @@ class AddUserToOrganizationTestCases(TestCase):
         return resp
 
     def test_non_existed_user(self):
-        response = self._post_rest_api('/v1/add_user_to_organization', {'user_name': 'xx', 'org_name': 'CameraIQ'})
+        response = self._post_rest_api('/v1/add_user_to_organization', {'user_email': 'xx', 'org_name': 'CameraIQ'})
         self.assertEqual(response.status_code, 402)
         self.assertEqual(response.json, {
             "message": "User does not exist!",
             "payload": {
-                "user_name": "xx",
+                "user_email": "xx",
                 "org_name": "CameraIQ"
             }
         })
 
     def test_non_existed_organization(self):
-        server.user_db = {'user_name': ['John']}
-        response = self._post_rest_api('/v1/add_user_to_organization', {'user_name': 'John', 'org_name': 'xxxx'})
+        server.user_tb = {
+            'users': [{
+                'user_first_name': 'John',
+                'user_last_name': 'Doe',
+                'user_email': 'John@att.com'
+            }]
+        }
+        response = self._post_rest_api('/v1/add_user_to_organization', {
+            'user_email': 'John@att.com',
+            'org_name': 'xxxx'
+        })
         self.assertEqual(response.status_code, 402)
         self.assertEqual(response.json, {
             "message": "Organization does not exist!",
             "payload": {
-                "user_name": "John",
+                "user_email": "John@att.com",
                 "org_name": "xxxx"
             }
         })
 
     def test_add_user_to_organization_successfully(self):
-        server.user_db = {'user_name': ['John']}
-        server.organization_db = {'org_name': ['CameraIQ']}
-        response = self._post_rest_api('/v1/add_user_to_organization', {'user_name': 'John', 'org_name': 'CameraIQ'})
+        server.user_tb = {
+            'users': [{
+                'user_first_name': 'John',
+                'user_last_name': 'Doe',
+                'user_email': 'John@att.com'
+            }]
+        }
+        server.organization_tb = {'organizations': [{'org_name': 'CameraIQ'}]}
+        response = self._post_rest_api('/v1/add_user_to_organization', {
+            'user_email': 'John@att.com',
+            'org_name': 'CameraIQ'
+        })
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {
             "message": "Added User in Organization!",
             "payload": {
-                'user_name': 'John',
+                'user_email': 'John@att.com',
                 'org_name': 'CameraIQ'
             }
         })
