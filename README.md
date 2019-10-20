@@ -51,3 +51,7 @@ communicate your design choices. We expect your API to support the following ope
   ###### RUN docker compose to run container: 
     <pre>docker compose up</pre>
   ###### Check server url 127.0.0.1:8001
+
+### How to run Tests:
+  ###### RUN flake8 and unit tests in the folder
+    . ./bin/run_tests.sh

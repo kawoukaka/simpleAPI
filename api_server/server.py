@@ -190,9 +190,13 @@ class AddUserToOrganization(Resource):
         org_name = args.get('org_name')
         user_email = args.get('user_email')
         try:
+            if len(user_tb['users']) == 0:
+                raise UserDoesNotExist('User does not exist!', 402, args)
             for user in user_tb['users']:
-                if user['user_email'] != user_email:
+                if user['user_email'] != user_email or len(user_tb['users']) == 0:
                     raise UserDoesNotExist('User does not exist!', 402, args)
+            if len(organization_tb['organizations']) == 0:
+                raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
             for org in organization_tb['organizations']:
                 if org['org_name'] != org_name:
                     raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
@@ -235,11 +239,15 @@ class DeleteUserFromOrganization(Resource):
         org_name = args.get('org_name')
         user_email = args.get('user_email')
         try:
+            if len(user_tb['users']) == 0:
+                raise UserDoesNotExist('User does not exist!', 402, args)
             for user in user_tb['users']:
-                if user['user_email'] != user_email:
+                if user['user_email'] != user_email or len(user_tb['users']) == 0:
                     raise UserDoesNotExist('User does not exist!', 402, args)
+            if len(organization_tb['organizations']) == 0:
+                raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
             for org in organization_tb['organizations']:
-                if org['org_name'] != org_name:
+                if org['org_name'] != org_name or len(organization_tb['organizations']) == 0:
                     raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
             if 'organizations' in user_org_tb:
                 for org in user_org_tb['organizations']:
@@ -279,6 +287,8 @@ class GetUsersFromOrganization(Resource):
         args = request.get_json()
         org_name = args.get('org_name')
         try:
+            if len(organization_tb['organizations']) == 0:
+                raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
             for org in organization_tb['organizations']:
                 if org['org_name'] != org_name:
                     raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
@@ -311,6 +321,8 @@ class GetOrganizationsBelongToUser(Resource):
         args = request.get_json()
         user_email = args.get('user_email')
         try:
+            if len(user_tb['users']) == 0:
+                raise UserDoesNotExist('User does not exist!', 402, args)
             for user in user_tb['users']:
                 if user['user_email'] != user_email:
                     raise UserDoesNotExist('User does not exist!', 402, args)
