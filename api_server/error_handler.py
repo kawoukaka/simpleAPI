@@ -1,5 +1,6 @@
 from werkzeug.exceptions import UnprocessableEntity, NotFound
 
+
 class UserAlreadyExistsError(UnprocessableEntity):
     """
     Custom UserAlreadyExistsError class to be thrown when local error occurs.

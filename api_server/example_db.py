@@ -1,14 +1,14 @@
 # user table
-user_db = {
-    'user_name': []
+user_tb = {
+    'users': []
 }
 # organization table
-organization_db = {
-    'org_name': []
+organization_tb = {
+    'organizations': []
 }
 # associate table
 # N:N relationship
-user_org_db = {
+user_org_tb = {
     'users': [],
     'organizations': []
 }

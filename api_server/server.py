@@ -11,11 +11,17 @@ from api_server.flask_models import (
     get_all_organization_from_user_model,
     get_all_user_model,
 )
-from api_server.error_handler import *
+from api_server.error_handler import (
+    OrganizationAlreadyExistsError,
+    UserAlreadyExistsError,
+    OrganizationDoesNotExist,
+    UserDoesNotExist,
+    DatabaseSchemaError
+)
 from api_server.example_db import (
-    user_db,
-    organization_db,
-    user_org_db
+    user_tb,
+    organization_tb,
+    user_org_tb
 )
 
 import logging
@@ -51,7 +57,7 @@ api = Api(app,
           prefix='',
           version='1.0',
           title='simple API',
-          description='''The simple api provides create/view/edit 
+          description='''The simple api provides create/view/edit
           on the users in an organization''',
           catch_all_404s=True)
 
@@ -97,14 +103,28 @@ class CreateOrganization(Resource):
         """
         args = request.get_json()
         org_name = args.get('org_name')
+        org_address = args.get('org_address')
+        org_phone = args.get('org_phone')
         try:
-            if org_name in organization_db['org_name']:
-                raise OrganizationAlreadyExistsError('Organization name existed!', 402, args)
-            organization_db['org_name'].append(org_name)
-            user_org_db['organizations'].append({
-                'org_name': org_name,
-                'users': []
-            })
+            if 'organizations' in organization_tb:
+                for org in organization_tb['organizations']:
+                    if org['org_name'] == org_name:
+                        raise OrganizationAlreadyExistsError('Organization name existed!', 402, args)
+                else:
+                    organization_tb['organizations'].append({
+                        'org_name': org_name,
+                        'org_address': org_address,
+                        'org_phone': org_phone,
+                    })
+            else:
+                raise DatabaseSchemaError('Database Schema Error!', 404, args)
+            if 'organizations' in user_org_tb:
+                user_org_tb['organizations'].append({
+                    'org_name': org_name,
+                    'users': []
+                })
+            else:
+                raise DatabaseSchemaError('Database Schema Error!', 404, args)
         except OrganizationAlreadyExistsError as e:
             return {'message': e.message, 'payload': args}, e.status
         except Exception:
@@ -125,15 +145,33 @@ class CreateUser(Resource):
         Create a single User in database
         """
         args = request.get_json()
-        user_name = args.get('user_name')
+        user_first_name = args.get('user_first_name')
+        user_last_name = args.get('user_last_name')
+        user_email = args.get('user_email')
+        user_address = args.get('user_address')
+        user_phone = args.get('user_phone')
         try:
-            if user_name in user_db['user_name']:
-                raise UserAlreadyExistsError('User name existed!', 402, args)
-            user_db['user_name'].append(user_name)
-            user_org_db['users'].append({
-                'user_name': user_name,
-                'organizations': []
-            })
+            if 'users' in user_tb:
+                for user in user_tb['users']:
+                    if user['user_email'] == user_email:
+                        raise UserAlreadyExistsError('User name existed!', 402, args)
+                else:
+                    user_tb['users'].append({
+                        'user_email': user_email,
+                        'user_first_name': user_first_name,
+                        'user_last_name': user_last_name,
+                        'user_address': user_address,
+                        'user_phone': user_phone
+                    })
+            else:
+                raise DatabaseSchemaError('Database Schema Error!', 404, args)
+            if 'users' in user_org_tb:
+                user_org_tb['users'].append({
+                    'user_email': user_email,
+                    'organizations': []
+                })
+            else:
+                raise DatabaseSchemaError('Database Schema Error!', 404, args)
         except UserAlreadyExistsError as e:
             return {'message': e.message, 'payload': args}, e.status
         except Exception:
@@ -155,29 +193,47 @@ class AddUserToOrganization(Resource):
         """
         args = request.get_json()
         org_name = args.get('org_name')
-        user_name = args.get('user_name')
+        user_email = args.get('user_email')
         try:
-            if user_name not in user_db['user_name']:
+            if len(user_tb['users']) == 0:
                 raise UserDoesNotExist('User does not exist!', 402, args)
-            if org_name not in organization_db['org_name']:
+            for user in user_tb['users']:
+                if user['user_email'] != user_email or len(user_tb['users']) == 0:
+                    raise UserDoesNotExist('User does not exist!', 402, args)
+            if len(organization_tb['organizations']) == 0:
                 raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
-            if 'organizations' in user_org_db:
-                for org in user_org_db['organizations']:
+            for org in organization_tb['organizations']:
+                if org['org_name'] != org_name:
+                    raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
+            if 'organizations' in user_org_tb:
+                for org in user_org_tb['organizations']:
                     if org['org_name'] == org_name:
-                        org['users'].append(user_name)
-                    else:
-                        raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
+                        if user_email in org['users']:
+                            raise UserAlreadyExistsError('User existed in the organization!', 402, args)
+                        org['users'].append(user_email)
+                        break
+                else:
+                    raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
             else:
                 raise DatabaseSchemaError('Database Schema Error!', 404, args)
-            if 'users' in user_org_db:
-                for user in user_org_db['users']:
-                    if user['user_name'] == user_name:
+            if 'users' in user_org_tb:
+                for user in user_org_tb['users']:
+                    if user['user_email'] == user_email:
+                        if org_name in user['organizations']:
+                            raise OrganizationAlreadyExistsError('Organization that belongs to user existed!', 402, args)
                         user['organizations'].append(org_name)
-                    else:
-                        raise UserDoesNotExist('User does not exist!', 402, args)
+                        break
+                else:
+                    raise UserDoesNotExist('User does not exist!', 402, args)
             else:
                 raise DatabaseSchemaError('Database Schema Error!', 404, args)
-        except (UserDoesNotExist, OrganizationDoesNotExist, DatabaseSchemaError) as e:
+
+        except (
+                UserDoesNotExist,
+                OrganizationDoesNotExist,
+                OrganizationAlreadyExistsError,
+                UserAlreadyExistsError,
+                DatabaseSchemaError) as e:
             return {'message': e.message, 'payload': args}, e.status
         except Exception:
             logger.exception('Unexpected Error!')
@@ -198,26 +254,34 @@ class DeleteUserFromOrganization(Resource):
         """
         args = request.get_json()
         org_name = args.get('org_name')
-        user_name = args.get('user_name')
+        user_email = args.get('user_email')
         try:
-            if user_name not in user_db['user_name']:
+            if len(user_tb['users']) == 0:
                 raise UserDoesNotExist('User does not exist!', 402, args)
-            if org_name not in organization_db['org_name']:
+            for user in user_tb['users']:
+                if user['user_email'] != user_email or len(user_tb['users']) == 0:
+                    raise UserDoesNotExist('User does not exist!', 402, args)
+            if len(organization_tb['organizations']) == 0:
                 raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
-            if 'organizations' in user_org_db:
-                for org in user_org_db['organizations']:
-                    if org['org_name'] == org_name and user_name in org['users']:
-                        org['users'].remove(user_name)
-                    else:
-                        raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
+            for org in organization_tb['organizations']:
+                if org['org_name'] != org_name or len(organization_tb['organizations']) == 0:
+                    raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
+            if 'organizations' in user_org_tb:
+                for org in user_org_tb['organizations']:
+                    if org['org_name'] == org_name and user_email in org['users']:
+                        org['users'].remove(user_email)
+                        break
+                else:
+                    raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
             else:
                 raise DatabaseSchemaError('Database Schema Error!', 404, args)
-            if 'users' in user_org_db:
-                for user in user_org_db['users']:
-                    if user['user_name'] == user_name and org_name in user['organizations']:
+            if 'users' in user_org_tb:
+                for user in user_org_tb['users']:
+                    if user['user_email'] == user_email and org_name in user['organizations']:
                         user['organizations'].remove(org_name)
-                    else:
-                        raise UserDoesNotExist('User does not exist!', 402, args)
+                        break
+                else:
+                    raise UserDoesNotExist('Organization does not belong to user!', 402, args)
             else:
                 raise DatabaseSchemaError('Database Schema Error!', 404, args)
         except (UserDoesNotExist, OrganizationDoesNotExist, DatabaseSchemaError) as e:
@@ -242,14 +306,17 @@ class GetUsersFromOrganization(Resource):
         args = request.get_json()
         org_name = args.get('org_name')
         try:
-            if org_name not in organization_db['org_name']:
+            if len(organization_tb['organizations']) == 0:
                 raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
-            if 'organizations' in user_org_db:
-                for org in user_org_db['organizations']:
+            for org in organization_tb['organizations']:
+                if org['org_name'] != org_name:
+                    raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
+            if 'organizations' in user_org_tb:
+                for org in user_org_tb['organizations']:
                     if org['org_name'] == org_name:
                         return {'results': org['users'], 'payload': args}, 200
-                    else:
-                        raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
+                else:
+                    raise OrganizationDoesNotExist('Organization does not exist!', 402, args)
             else:
                 raise DatabaseSchemaError('Database Schema Error!', 404, args)
         except (OrganizationDoesNotExist, DatabaseSchemaError) as e:
@@ -271,16 +338,19 @@ class GetOrganizationsBelongToUser(Resource):
         Get Organizations Belong To User in database
         """
         args = request.get_json()
-        user_name = args.get('user_name')
+        user_email = args.get('user_email')
         try:
-            if user_name not in user_db['user_name']:
+            if len(user_tb['users']) == 0:
                 raise UserDoesNotExist('User does not exist!', 402, args)
-            if 'users' in user_org_db:
-                for user in user_org_db['users']:
-                    if user['user_name'] == user_name:
+            for user in user_tb['users']:
+                if user['user_email'] != user_email:
+                    raise UserDoesNotExist('User does not exist!', 402, args)
+            if 'users' in user_org_tb:
+                for user in user_org_tb['users']:
+                    if user['user_email'] == user_email:
                         return {'results': user['organizations'], 'payload': args}, 200
-                    else:
-                        raise UserDoesNotExist('User does not exist!', 402, args)
+                else:
+                    raise UserDoesNotExist('User does not exist!', 402, args)
             else:
                 raise DatabaseSchemaError('Database Schema Error!', 404, args)
         except (UserDoesNotExist, DatabaseSchemaError) as e:
@@ -292,4 +362,3 @@ class GetOrganizationsBelongToUser(Resource):
 
 if __name__ == '__main__':
     app.run()
-
