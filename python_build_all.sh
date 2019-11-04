@@ -1,6 +1,6 @@
 #! /bin/bash
 #
-# Build Python 3.x.x from source on CentOS Linux.
+# Build Python 3.x.x from source on Linux.
 # =============================================================================
 # Assume env. variable PYTHON_VERSION is defined, e.g. PYTHON_VERSION=3.5.2
 # =============================================================================
