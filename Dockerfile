@@ -1,6 +1,6 @@
 # Debian Slim with Python 3.6 on Docker
 # =============================================================================
-# FROM dockercentral.it.example.com:5100/com.example.dev.argos/debian:stretch-slim
+# FROM dockercentral.it.example.com:5100/debian:stretch-slim
 FROM debian:stretch-slim
 
 # Set the Python 3.x.x version.
